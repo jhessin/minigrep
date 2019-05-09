@@ -4,17 +4,35 @@ use std::fs;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    let (query, filename) = parse_config(&args);
+    match Config::new(&args) {
+        Err(msg) => {
+            println!("{}", msg);
+        },
+        Ok(config) => {
+            println!(
+                "Searching for {}\nIn file {}",
+                config.query, config.filename
+            );
+            let contents = fs::read_to_string(config.filename).expect("Something went wrong reading the file");
+            println!("With text: \n{}", contents);
+        },
+    }
 
-    println!("Searching for {}\nIn file {}", query, filename);
-
-    let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
-
-    println!("With text: \n{}", contents);
 }
 
-fn parse_config(args: &Vec<String>) -> (&String, &String) {
-    let query = &args[1];
-    let filename = &args[2];
-    (query, filename)
+struct Config {
+    query: String,
+    filename: String,
+}
+
+impl Config {
+    fn new(args: &[String]) -> Result<Config, &'static str> {
+        if args.len() < 3 {
+            return Err("not enough arguments");
+        }
+        Ok(Config {
+            query: args[1].clone(),
+            filename: args[2].clone(),
+        })
+    }
 }
